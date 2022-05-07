@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/factorio-mod-settings-editor/static/css/main.ed57b5e5.css",
+    "main.css": "/factorio-mod-settings-editor/static/css/main.46f48682.css",
     "main.js": "/factorio-mod-settings-editor/static/js/main.0f779f80.js",
     "static/js/787.78298ba2.chunk.js": "/factorio-mod-settings-editor/static/js/787.78298ba2.chunk.js",
     "index.html": "/factorio-mod-settings-editor/index.html",
-    "main.ed57b5e5.css.map": "/factorio-mod-settings-editor/static/css/main.ed57b5e5.css.map",
+    "main.46f48682.css.map": "/factorio-mod-settings-editor/static/css/main.46f48682.css.map",
     "main.0f779f80.js.map": "/factorio-mod-settings-editor/static/js/main.0f779f80.js.map",
     "787.78298ba2.chunk.js.map": "/factorio-mod-settings-editor/static/js/787.78298ba2.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.ed57b5e5.css",
+    "static/css/main.46f48682.css",
     "static/js/main.0f779f80.js"
   ]
 }
