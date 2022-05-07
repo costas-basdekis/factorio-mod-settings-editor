@@ -7,6 +7,8 @@ names, and translations of the mod settings from
 [factorio-mod-local-parser](https://costas-basdekis.github.io/factorio-mod-locale-parser/)
 ([repo](https://github.com/costas-basdekis/factorio-mod-locale-parser))
 
+![App screenshot of a sample mod settings file being edited](./screenshot.png?raw=true)
+
 ## Credits
 
 Based on [a parser](https://github.com/credomane/factoriomodsettings) 
