@@ -9,6 +9,10 @@ names, and translations of the mod settings from
 
 ![App screenshot of a sample mod settings file being edited](./screenshot.png?raw=true)
 
+## License
+
+[MIT License](LICENSE)
+
 ## Credits
 
 Based on [a parser](https://github.com/credomane/factoriomodsettings) 
