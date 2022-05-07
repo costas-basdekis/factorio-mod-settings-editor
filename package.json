@@ -1,5 +1,6 @@
 {
   "name": "factorio-mod-settings-editor",
+  "homepage": "https://costas-basdekis.github.io/factorio-mod-settings-editor/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
