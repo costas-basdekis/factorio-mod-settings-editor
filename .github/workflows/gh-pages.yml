@@ -1,0 +1,23 @@
+name: Github Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  gh-deploy:
+    name: "Deploy the app"
+    concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4.2.2
+        with:
+          branch: gh-pages
+          folder: build
