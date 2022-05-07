@@ -95,7 +95,7 @@ class TabPanel extends Component {
       }
       throw e;
     }
-    this.downloadBlob(buffer, "mod-settings.dat", "application/octet-stream");
+    this.downloadBlob(buffer, this.props.tab.name || "mod-settings.dat", "application/octet-stream");
   };
 
   downloadBlob(data, fileName, mimeType) {
