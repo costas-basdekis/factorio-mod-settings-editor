@@ -400,6 +400,12 @@ export default class App extends Component {
   onFileDrop = async files => {
     const newCodecErrors = [];
     let selectedTabIndex = null;
+    const setSelectedTabIndex = newValue => {
+      if (selectedTabIndex === null) {
+        selectedTabIndex = newValue;
+      }
+    };
+
     for (const file of files) {
       if (file.name.endsWith(".json") && file.name.includes("mod-list")) {
         let modListData;
@@ -431,15 +437,18 @@ export default class App extends Component {
         continue;
       }
       this.setState(({tabs}) => {
-        if (selectedTabIndex === null) {
-          selectedTabIndex = tabs.length + 1;
-        }
-        return {
-          tabs: [...tabs, {
+        const newTabs = [
+          ...tabs,
+          {
             id: tabs.length ? tabs.slice(-1)[0].id + 1 : 1,
             name: file.name,
             settings,
-          }]
+          },
+        ];
+        // The index of the new last item, +1 because of the mods list editor
+        setSelectedTabIndex(newTabs.length - 1 + 1);
+        return {
+          tabs: newTabs,
         };
       });
     }
