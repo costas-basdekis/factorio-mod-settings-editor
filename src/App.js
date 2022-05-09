@@ -13,6 +13,77 @@ function a11yProps(index) {
   };
 }
 
+class MyMods extends Component {
+  state = {
+    search: "",
+  };
+
+  render() {
+    const {search} = this.state;
+    const {selectedTabIndex, tabIndex, modList, modSettingsData} = this.props;
+
+    const allMods = modSettingsData ? Object.values(modSettingsData.mods) : [];
+    let orderedMods = modList ? [
+      ...allMods.filter(mod => modList.includes(mod.name)),
+      ...((foundMods) => modList.filter(modName => !foundMods.includes(modName)).map(modName => ({name: modName, title: `${modName} - Unknown`})))(allMods.filter(mod => modList.includes(mod.name)).map(mod => mod.name)),
+      ...allMods.filter(mod => !modList.includes(mod.name)),
+    ] : allMods;
+    if (search) {
+      orderedMods = orderedMods.filter(mod => mod.name.toLowerCase().includes(search.toLowerCase()));
+    }
+
+    return (
+      <div
+        role={"tabpanel"}
+        hidden={selectedTabIndex !== tabIndex}
+        id={`simple-tabpanel-${tabIndex}`}
+        aria-labelledby={`simple-tab-${tabIndex}`}
+      >
+        <label>Show all mods <input type={"checkbox"} checked={modList === null} onChange={this.onShowAllMods} /></label>
+        <br/>
+        {modList ? (
+          <>
+            <label>Search: <input type={"text"} value={search} onChange={this.onSearchChange} /></label>
+            <br/>
+            <ul>
+              {orderedMods.map(mod => (
+                <li key={mod.name}>
+                  <label>
+                    <input type={"checkbox"} checked={modList.includes(mod.name)} onChange={({target: {checked}}) => {
+                      this.onModChange(mod, checked);
+                    }}/>
+                    {" "}{mod.title}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </div>
+    );
+  }
+
+  onShowAllMods = ({target: {checked}}) => {
+    if (checked) {
+      this.props.onModListUpdate(null);
+    } else {
+      this.props.onModListUpdate([]);
+    }
+  };
+
+  onModChange = (mod, checked) => {
+    if (checked) {
+      this.props.onModListUpdate([...this.props.modList, mod.name]);
+    } else {
+      this.props.onModListUpdate(this.props.modList.filter(modName => modName !== mod.name));
+    }
+  };
+
+  onSearchChange = ({target: {value}}) => {
+    this.setState({search: value});
+  };
+}
+
 class TabPanel extends Component {
   state = {
     originalSettings: this.props.tab.settings,
@@ -21,7 +92,7 @@ class TabPanel extends Component {
   };
 
   render() {
-    const {modSettingsData, locale, tabIndex, selectedTabIndex} = this.props;
+    const {modSettingsData, locale, tabIndex, selectedTabIndex, modList} = this.props;
     const {originalSettings, settings, creatingDownload} = this.state;
 
     return (
@@ -57,7 +128,8 @@ class TabPanel extends Component {
         <SettingsEditor 
           modSettingsData={modSettingsData}
           locale={locale}
-          settings={settings} 
+          settings={settings}
+          modList={modList}
           onChange={this.onSettingsChange} 
         />
       </div>
@@ -128,6 +200,7 @@ export default class App extends Component {
     tabs: [
     ],
     selectedTabIndex: 0,
+    modList: null,
   };
 
   fileInputRef = createRef();
@@ -178,7 +251,7 @@ export default class App extends Component {
   }
 
   render() {
-    const {codecErrors, modSettingsData, locale, loadModTranslations, tabs, selectedTabIndex} = this.state;
+    const {codecErrors, modSettingsData, locale, loadModTranslations, tabs, selectedTabIndex, modList} = this.state;
 
     return (
       <div className="App">
@@ -193,7 +266,7 @@ export default class App extends Component {
             onDrop={this.onFileDrop}
             onTargetClick={this.onTargetClick}
           >
-            Drop one or more mod-settings.dat files here, or 
+            Drop one or more mod-settings.dat or mod-list.json files here, or
             <Button color={"primary"} variant={"contained"}>pick a file</Button>
           </FileDrop>
         </div>
@@ -214,24 +287,38 @@ export default class App extends Component {
         <br/>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={selectedTabIndex} onChange={this.onTabChange} aria-label={"basic tabs example"}>
-            {tabs.map(tab => (
+            <Tab
+              key={"modList"}
+              label={"Your mods"}
+              {...a11yProps(0)}
+            />
+            {tabs.map((tab, index) => (
               <Tab 
                 key={tab.id}
                 label={tab.name || `File ${tab.id}`} 
-                {...a11yProps(tab.id)}
+                {...a11yProps(index + 1)}
               />
             ))}
           </Tabs>
         </Box>
+        <MyMods
+          key={"my-mods"}
+          selectedTabIndex={selectedTabIndex}
+          tabIndex={0}
+          modSettingsData={modSettingsData}
+          modList={modList}
+          onModListUpdate={this.onModListUpdate}
+        />
         {tabs.map((tab, index) => (
           <TabPanel 
             key={tab.id}
             selectedTabIndex={selectedTabIndex} 
-            tabIndex={index}
+            tabIndex={index + 1}
             tab={tab}
             registerTab={this.registerTab}
             unregisterTab={this.unregisterTab}
             modSettingsData={modSettingsData}
+            modList={modList}
             locale={locale}
             onPickFile={this.onTargetClick}
             onClose={this.onTabClose}
@@ -261,6 +348,10 @@ export default class App extends Component {
     );
   }
 
+  onModListUpdate = modList => {
+    this.setState({modList});
+  };
+
   onLoaderErrorClose = () => {
     this.setState({codecErrors: []});
   };
@@ -270,7 +361,6 @@ export default class App extends Component {
   };
 
   onTabClose = tab => {
-    console.log(tab, this.state.tabs, this.state.tabs.filter(otherTab => otherTab !== tab))
     this.setState(({tabs, selectedTabIndex}) => {
       if (!tabs.includes(tab)) {
         return null;
@@ -309,7 +399,25 @@ export default class App extends Component {
 
   onFileDrop = async files => {
     const newCodecErrors = [];
+    let selectedTabIndex = null;
     for (const file of files) {
+      if (file.name.endsWith(".json") && file.name.includes("mod-list")) {
+        let modListData;
+        try {
+          const text = await file.text();
+          modListData = JSON.parse(text);
+        } catch (e) {
+          newCodecErrors.push({fileName: file.name, message: `Could not load mod list file (${e.message})`});
+          continue;
+        }
+        if (!modListData || !Array.isArray(modListData.mods)) {
+          newCodecErrors.push({fileName: file.name, message: `Mod list file did not have the expected format`});
+          continue;
+        }
+        const modList = modListData.mods.map(item => item?.name).filter(name => name);
+        this.setState({modList});
+        continue;
+      }
       const fileBuffer = await file.arrayBuffer();
       let settings;
       try {
@@ -322,16 +430,31 @@ export default class App extends Component {
         }
         continue;
       }
-      this.setState(({tabs}) => ({
-        tabs: [...tabs, {
-          id: tabs.length ? tabs.slice(-1)[0].id + 1 : 1,
-          name: file.name,
-          settings,
-        }]
-      }));
+      this.setState(({tabs}) => {
+        if (selectedTabIndex === null) {
+          selectedTabIndex = tabs.length + 1;
+        }
+        return {
+          tabs: [...tabs, {
+            id: tabs.length ? tabs.slice(-1)[0].id + 1 : 1,
+            name: file.name,
+            settings,
+          }]
+        };
+      });
     }
-    this.setState(({codecErrors}) => ({
-      codecErrors: [...codecErrors, ...newCodecErrors],
-    }));
+    if (newCodecErrors.length) {
+      this.setState(({codecErrors}) => {
+        return {
+          codecErrors: [...codecErrors, ...newCodecErrors],
+        };
+      });
+    }
+    this.setState(() => {
+      if (selectedTabIndex === null) {
+        return null;
+      }
+      return {selectedTabIndex};
+    });
   };
 }

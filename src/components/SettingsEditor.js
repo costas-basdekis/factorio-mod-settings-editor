@@ -7,7 +7,7 @@ import { translateCoreText } from "../localeUtils";
 
 export class SettingsEditor extends Component {
   render() {
-    const {modSettingsData, locale, settings} = this.props;
+    const {modSettingsData, locale, settings, modList} = this.props;
     return (
       <>
         <TreeView
@@ -26,6 +26,7 @@ export class SettingsEditor extends Component {
                 value={settings.settings}
                 typeAndData={settings.typeAndData}
                 path={[]}
+                modList={modList}
                 onChange={this.props.onChange}
               />
             </TreeItem>

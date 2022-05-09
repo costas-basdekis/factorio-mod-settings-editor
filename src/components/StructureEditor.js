@@ -212,7 +212,8 @@ class DictionaryEditor extends Component {
         const mods = Array.from(Object.values(props.modSettingsData.mods))
           .filter(mod => names.some(name => mod.setting_names.includes(name.toLowerCase())));
         const noModNames = names.filter(name => !mods.some(mod => mod.setting_names.includes(name.toLowerCase())));
-        const treeItems = mods.map(mod => (
+        const userMods = props.modList ? mods.filter(mod => props.modList.includes(mod.name)) : mods;
+        const treeItems = userMods.map(mod => (
           <TreeItem key={mod.name} nodeId={`mod-${mod.name}`} label={mod.title}>
             <DictionaryEditor {...{
               ...props,
@@ -245,6 +246,7 @@ class DictionaryEditor extends Component {
             locale,
             value: item,
             typeAndData: typeData[subKey],
+            modList: props.modList,
             editable,
             path: path ? [...path, subKey] : null,
             onChange: props.onChange,
@@ -261,7 +263,7 @@ class DictionaryEditor extends Component {
   }
 
   render() {
-    const {modSettingsData, mod, locale, value, typeAndData, editable = true, path = null} = this.props;
+    const {modSettingsData, mod, locale, value, typeAndData, editable = true, path = null, modList} = this.props;
     const [type, typeData] = typeAndData;
     if (typeof value !== typeof {}) {
       throw new Error("Expected dictionary value");
@@ -277,6 +279,7 @@ class DictionaryEditor extends Component {
         locale,
         value: item,
         typeAndData: typeData[key],
+        modList: modList,
         editable,
         path: path ? [...path, key] : null,
         onChange: this.props.onChange,
