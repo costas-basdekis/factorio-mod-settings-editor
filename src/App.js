@@ -4,7 +4,7 @@ import "./fileDrop.css";
 import { FileDrop } from 'react-file-drop';
 import {FactorioModSettings, DecoderError, EncoderError} from "./factorioModSettings";
 import { SettingsEditor } from "./components";
-import {Box, Button, InputLabel, Dialog, DialogTitle, DialogActions, MenuItem, Select, Tab, Tabs} from "@mui/material";
+import {Box, Button, InputLabel, Dialog, DialogContent, DialogTitle, DialogActions, MenuItem, Select, Tab, Tabs} from "@mui/material";
 
 function a11yProps(index) {
   return {
@@ -121,7 +121,7 @@ class TabPanel extends Component {
 
 export default class App extends Component {
   state = {
-    codecError: null,
+    codecErrors: [],
     modSettingsData: null,
     locale: "en",
     loadModTranslations: false,
@@ -178,7 +178,7 @@ export default class App extends Component {
   }
 
   render() {
-    const {codecError, modSettingsData, locale, loadModTranslations, tabs, selectedTabIndex} = this.state;
+    const {codecErrors, modSettingsData, locale, loadModTranslations, tabs, selectedTabIndex} = this.state;
 
     return (
       <div className="App">
@@ -238,14 +238,19 @@ export default class App extends Component {
           />
         ))}
         <Dialog
-          open={!!codecError}
+          open={codecErrors.length > 0}
           onClose={this.onLoaderErrorClose}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
-          <DialogTitle id="alert-dialog-title">
-            {codecError}
-          </DialogTitle>
+          <DialogTitle>There were some errors with the file(s)</DialogTitle>
+          <DialogContent id="alert-dialog-title">
+            <ul>
+              {codecErrors.map(({fileName, message}, index) => (
+                <li key={index}>{fileName}: {message}</li>
+              ))}
+            </ul>
+          </DialogContent>
           <DialogActions>
             <Button onClick={this.onLoaderErrorClose} autoFocus>
               OK
@@ -257,7 +262,7 @@ export default class App extends Component {
   }
 
   onLoaderErrorClose = () => {
-    this.setState({codecError: null});
+    this.setState({codecErrors: []});
   };
 
   onTabChange = (e, selectedTabIndex) => {
@@ -303,6 +308,7 @@ export default class App extends Component {
   };
 
   onFileDrop = async files => {
+    const newCodecErrors = [];
     for (const file of files) {
       const fileBuffer = await file.arrayBuffer();
       let settings;
@@ -310,10 +316,11 @@ export default class App extends Component {
         settings = FactorioModSettings.fromBuffer(fileBuffer);
       } catch (e) {
         if (e instanceof DecoderError) {
-          this.setState({codecError: e.message});
-          return;
+          newCodecErrors.push({fileName: file.name, message: e.message});
+        } else {
+          newCodecErrors.push({fileName: file.name, message: `Encountered an unexpected error (${e.message})`});
         }
-        throw e;
+        continue;
       }
       this.setState(({tabs}) => ({
         tabs: [...tabs, {
@@ -323,5 +330,8 @@ export default class App extends Component {
         }]
       }));
     }
+    this.setState(({codecErrors}) => ({
+      codecErrors: [...codecErrors, ...newCodecErrors],
+    }));
   };
 }
