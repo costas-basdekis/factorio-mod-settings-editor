@@ -13,13 +13,41 @@ function a11yProps(index) {
   };
 }
 
+const REMEMBER_MOD_LIST_LOCAL_STORAGE_KEY = "factorioModSettingsEditor.rememberModList";
+const getRememberModList = () => {
+  if (localStorage.getItem(REMEMBER_MOD_LIST_LOCAL_STORAGE_KEY) === null) {
+    setRememberModList(true);
+    return true;
+  }
+  return JSON.parse(localStorage.getItem(REMEMBER_MOD_LIST_LOCAL_STORAGE_KEY));
+};
+
+const setRememberModList = (rememberSettings) => {
+  localStorage.setItem(REMEMBER_MOD_LIST_LOCAL_STORAGE_KEY, JSON.stringify(rememberSettings));
+};
+
+const MOD_LIST_LOCAL_STORAGE_KEY = "factorioModSettingsEditor.modList";
+
+const getModList = () => {
+  if (localStorage.getItem(MOD_LIST_LOCAL_STORAGE_KEY) === null) {
+    setModList(null);
+    return null;
+  }
+  return JSON.parse(localStorage.getItem(MOD_LIST_LOCAL_STORAGE_KEY));
+};
+
+const setModList = modList => {
+  localStorage.setItem(MOD_LIST_LOCAL_STORAGE_KEY, JSON.stringify(modList));
+};
+
 class MyMods extends Component {
   state = {
+    rememberSettings: getRememberModList(),
     search: "",
   };
 
   render() {
-    const {search} = this.state;
+    const {rememberSettings, search} = this.state;
     const {selectedTabIndex, tabIndex, modList, modSettingsData} = this.props;
 
     const allMods = modSettingsData ? Object.values(modSettingsData.mods) : [];
@@ -39,7 +67,16 @@ class MyMods extends Component {
         id={`simple-tabpanel-${tabIndex}`}
         aria-labelledby={`simple-tab-${tabIndex}`}
       >
-        <label>Show all mods <input type={"checkbox"} checked={modList === null} onChange={this.onShowAllMods} /></label>
+        <label><input type={"checkbox"} checked={rememberSettings} onChange={this.onRememberSettingsChange} />Remember this list</label>
+        {rememberSettings ? null : (
+          <>
+            {" "}
+            <Button variant={"contained"} size={"small"} onClick={this.onSaveModList}>Save mod list</Button>
+            <Button variant={"contained"} size={"small"} onClick={this.onLoadModList}>Load mod list</Button>
+          </>
+        )}
+        <br/>
+        <label><input type={"checkbox"} checked={modList === null} onChange={this.onShowAllMods} />Show all mods</label>
         <br/>
         {modList ? (
           <>
@@ -62,6 +99,19 @@ class MyMods extends Component {
       </div>
     );
   }
+
+  onSaveModList = () => {
+    setModList(this.props.modList);
+  };
+
+  onLoadModList = () => {
+    this.props.onModListUpdate(getModList());
+  };
+
+  onRememberSettingsChange = ({target: {checked}}) => {
+    setRememberModList(checked);
+    this.setState({rememberSettings: checked});
+  };
 
   onShowAllMods = ({target: {checked}}) => {
     if (checked) {
@@ -200,7 +250,7 @@ export default class App extends Component {
     tabs: [
     ],
     selectedTabIndex: 0,
-    modList: null,
+    modList: getRememberModList() ? getModList() : null,
   };
 
   fileInputRef = createRef();
@@ -349,6 +399,9 @@ export default class App extends Component {
   }
 
   onModListUpdate = modList => {
+    if (getRememberModList()) {
+      setModList(modList);
+    }
     this.setState({modList});
   };
 
@@ -421,7 +474,7 @@ export default class App extends Component {
           continue;
         }
         const modList = modListData.mods.map(item => item?.name).filter(name => name);
-        this.setState({modList});
+        this.onModListUpdate(modList);
         continue;
       }
       const fileBuffer = await file.arrayBuffer();
