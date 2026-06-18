@@ -12,6 +12,8 @@ export class StructureEditor extends Component {
       case ModeSettingsPropertyTypes.string:
         return StringEditor.for(key, mod, props);
       case ModeSettingsPropertyTypes.number:
+      case ModeSettingsPropertyTypes.long:
+      case ModeSettingsPropertyTypes.ulong:
         return NumberEditor.for(key, mod, props);
       case ModeSettingsPropertyTypes.boolean:
         return BooleanEditor.for(key, mod, props);
@@ -32,6 +34,8 @@ export class StructureEditor extends Component {
       case ModeSettingsPropertyTypes.string:
         return <StringEditor {...this.props} />;
       case ModeSettingsPropertyTypes.number:
+      case ModeSettingsPropertyTypes.long:
+      case ModeSettingsPropertyTypes.ulong:
         return <NumberEditor {...this.props} />;
       case ModeSettingsPropertyTypes.boolean:
         return <BooleanEditor {...this.props} />;
@@ -100,10 +104,10 @@ class NumberEditor extends ValueEditor {
   render() {
     const {value, typeAndData, editable = true, path = null} = this.props;
     const [type] = typeAndData;
-    if (typeof value !== typeof 0) {
+    if (!["number", "bigint"].includes(typeof value)) {
       throw new Error("Expected number value");
     }
-    if (type !== ModeSettingsPropertyTypes.number) {
+    if (![ModeSettingsPropertyTypes.number, ModeSettingsPropertyTypes.long, ModeSettingsPropertyTypes.ulong].includes(type)) {
       throw new Error(`Got number but type was: ${type}`);
     }
     if (!editable) {
@@ -113,12 +117,12 @@ class NumberEditor extends ValueEditor {
       throw new Error("No path was provided for editable value");
     }
     return (
-      <input type={"number"} value={value} onChange={this.onChange} />
+      <input type={"number"} value={Number(value)} onChange={this.onChange} />
     );
   }
 
   onChange = ({target: {value}}) => {
-    this.props.onChange(parseInt(value, 10), this.props.path);
+    this.props.onChange(parseFloat(value), this.props.path);
   };
 }
 

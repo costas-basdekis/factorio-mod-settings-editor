@@ -22,5 +22,8 @@ export const ModeSettingsPropertyTypes = {
   list: 4,
   array: 4,
   dictionary: 5,
-  object: 5
+  object: 5,
+  bigint: 6,
+  long: 6,
+  ulong: 7,
 };

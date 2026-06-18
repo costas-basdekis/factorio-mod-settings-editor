@@ -40,6 +40,12 @@ export class ModSettingsSerialiser {
     this.saveRaw(buf);
   }
 
+  saveLong(value) {
+    let buf = Buffer.alloc(8);
+    buf.writeBigInt64LE(value);
+    this.saveRaw(buf);
+  }
+
   saveULong(value) {
     let buf = Buffer.alloc(8);
     buf.writeBigUInt64LE(value);
@@ -117,6 +123,12 @@ export class ModSettingsSerialiser {
           this.savePropertyTree(tree[value]);
         }.bind(this));
 
+        break;
+      case ModeSettingsPropertyTypes.long:
+        this.saveLong(tree);
+        break;
+      case ModeSettingsPropertyTypes.ulong:
+        this.saveULong(tree);
         break;
       default:
         throw new SerialiserError("Unknown type: " + type);

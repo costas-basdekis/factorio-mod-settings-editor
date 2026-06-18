@@ -43,8 +43,12 @@ export class ModSettingsDeserialiser {
     return this.loadTyped(4, "getUint32", true);
   }
 
+  loadLong() {
+    return this.loadTyped(8, "getBigInt64", true);
+  }
+
   loadULong() {
-    return this.loadTyped(8, "getUint64", true);
+    return this.loadTyped(8, "getBigUint64", true);
   }
 
   loadDouble() {
@@ -82,6 +86,12 @@ export class ModSettingsDeserialiser {
       }
       case ModeSettingsPropertyTypes.dictionary: {
         return this.loadPropertyDict();
+      }
+      case ModeSettingsPropertyTypes.long: {
+        return [type, null, this.loadLong()];
+      }
+      case ModeSettingsPropertyTypes.ulong: {
+        return [type, null, this.loadULong()];
       }
       default:
         throw new DeserialiserError("Unknown type: " + type);
